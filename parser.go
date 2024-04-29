@@ -18,13 +18,13 @@ type ParsedRc struct {
     Exports map[string]AliasExport
 }
 
-func ParseFile(filePath string) (ParsedRc, error) {
+func ParseFile(filePath string) (*ParsedRc, error) {
   aliases := make(map[string]AliasExport)
   exports := make(map[string]AliasExport)
 
   file, err := os.Open(filePath)
   if err != nil {
-    return ParsedRc{}, errors.New("Error opening file: " + err.Error())
+    return nil, errors.New("Error opening file: " + err.Error())
   }
   defer file.Close()
 
@@ -86,5 +86,5 @@ func ParseFile(filePath string) (ParsedRc, error) {
 		fmt.Println("Error reading .bashrc file:", err)
 	}
 
-  return ParsedRc{Aliases: aliases, Exports: exports}, nil
+  return &ParsedRc{Aliases: aliases, Exports: exports}, nil
 }

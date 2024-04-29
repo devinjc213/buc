@@ -7,6 +7,8 @@ import (
 )
 
 func main() {
+  args := os.Args[1:]
+
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		fmt.Println("Error getting home directory:", err)
@@ -21,13 +23,9 @@ func main() {
     return
   }
 
-  fmt.Println("Aliases:")
-  for name, alias := range result.Aliases {
-    fmt.Printf("  %s: %s\n", name, alias.Value)
-  }
-
-  fmt.Println("Exports:")
-  for name, export := range result.Exports {
-    fmt.Printf("  %s: %s\n", name, export.Value)
+  argErr := ParseArgs(args, result)
+  if argErr != nil {
+    fmt.Println("Error parsing args: ", err)
+    return
   }
 }
