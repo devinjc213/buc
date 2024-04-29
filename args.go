@@ -5,7 +5,7 @@ import (
   "errors"
 )
 
-func ParseArgs(args []string, file *ParsedRc) (error) {
+func HandleArgs(args []string, file *ParsedRc) (error) {
   if len(args) == 0 {
     fmt.Println("No command provided")
   }

@@ -8,6 +8,10 @@ import (
 
 func main() {
   args := os.Args[1:]
+  if len(args) == 0 {
+    fmt.Println("No command provided")
+    return
+  }
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -23,7 +27,7 @@ func main() {
     return
   }
 
-  argErr := ParseArgs(args, result)
+  argErr := HandleArgs(args, result)
   if argErr != nil {
     fmt.Println("Error parsing args: ", err)
     return
