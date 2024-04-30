@@ -16,10 +16,8 @@ var (
 func HandleArgs(file *ParsedRc) (error) {
   shorthands := []string{"ga", "ge", "sa", "se", "la", "le", "g", "l"}
   longforms := []string{"get", "set", "list"}
-  fmt.Println(Name)
 
   args := flag.Args()
-  fmt.Println(args)
   if len(args) == 0 {
     return errors.New("No command provided")
   }
