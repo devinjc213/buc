@@ -4,14 +4,25 @@ import (
 	"fmt"
 	"os"
   "path/filepath"
+  "flag"
 )
 
+var (
+  Name string
+  Value string
+  Cmd string
+  CmdType string
+)
+
+func init() {
+  flag.StringVar(&Name, "n", "", "Name of the alias or export")
+  flag.StringVar(&Name, "name", "", "Name of the alias or export")
+  flag.StringVar(&Value, "v", "", "Value of the alias or export")
+  flag.StringVar(&Value, "value", "", "Value of the alias or export")
+}
+
 func main() {
-  args := os.Args[1:]
-  if len(args) == 0 {
-    fmt.Println("No command provided")
-    return
-  }
+  flag.Parse()
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -27,7 +38,7 @@ func main() {
     return
   }
 
-  argErr := HandleArgs(args, result)
+  argErr := HandleArgs(result)
   if argErr != nil {
     fmt.Println("Error parsing args: ", err)
     return
