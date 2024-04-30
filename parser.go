@@ -19,24 +19,20 @@ type ParsedRc struct {
 }
 
 func ParseFile(filePath string) (*ParsedRc, error) {
+  file, err := os.ReadFile(filePath)
+  if err != nil {
+    return nil, errors.New("Error reading file")
+  }
+
+  fileStr := string(file)
+
+  lines := strings.Split(fileStr, "\n")
+
   aliases := make(map[string]AliasExport)
   exports := make(map[string]AliasExport)
 
-  file, err := os.Open(filePath)
-  if err != nil {
-    return nil, errors.New("Error opening file: " + err.Error())
-  }
-  defer file.Close()
-
-  lineNum := 1
-  var multiLineValue strings.Builder
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		trimmedLine := strings.TrimSpace(line)
-
+  for i, line := range lines {
+    trimmedLine := strings.TrimSpace(line)
     if strings.HasPrefix(trimmedLine, "alias") {
       parts := strings.SplitN(trimmedLine, "=", 2)
       if len(parts) != 2 {
@@ -49,42 +45,25 @@ func ParseFile(filePath string) (*ParsedRc, error) {
 
       if (strings.HasPrefix(value, "'") || strings.HasSuffix(value, "\"")) &&
       (!strings.HasSuffix(value, "'") || strings.HasPrefix(value, "\"")) {
-        multiLineValue.Reset()
-        multiLineValue.WriteString(value)
-        for scanner.Scan() {
-          nextLine := scanner.Text()
+        var quoteReached bool
+        j := 1 
 
+        for !quoteReached {
+          nextLine := lines[i + j]
           if strings.HasSuffix(nextLine, "\"") || strings.HasSuffix(nextLine, "'") {
-            multiLineValue.WriteString(nextLine)
-            break
+            value += nextLine
+            quoteReached = true
+          } else {
+            value += nextLine
           }
-
-          multiLineValue.WriteString(nextLine)
+          j++ 
         }
-
-        aliases[name] = AliasExport{Value: multiLineValue.String(), LineNum: lineNum}
-      } else {
-        aliases[name] = AliasExport{Value: value, LineNum: lineNum}
-      }
-    } else if strings.HasPrefix(trimmedLine, "export") {
-      parts := strings.SplitN(trimmedLine, "=", 2)
-      if len(parts) != 2 {
-        fmt.Println("Invalid export line:", line)
-        continue
       }
 
-      name := strings.TrimPrefix(strings.TrimSpace(parts[0]), "export ")
-      value := strings.TrimSpace(parts[1])
-
-      exports[name] = AliasExport{Value: value, LineNum: lineNum}
+      aliases[name] = AliasExport{Value: value, LineNum: i}
     }
-
-    lineNum++
-	}
-
-	if err := scanner.Err(); err != nil {
-		fmt.Println("Error reading .bashrc file:", err)
-	}
+  }
 
   return &ParsedRc{Aliases: aliases, Exports: exports}, nil
 }
+
