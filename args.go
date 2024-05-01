@@ -17,7 +17,6 @@ func HandleArgs(file *ParsedRc) (error) {
   shorthands := []string{"ga", "ge", "sa", "se", "la", "le", "g", "l"}
   longforms := []string{"get", "set", "list"}
 
-  fmt.Println(os.Args)
   verb := os.Args[1]
 
   if slices.Contains(shorthands, verb) {
@@ -35,9 +34,12 @@ func HandleArgs(file *ParsedRc) (error) {
       CmdType = "alias"
     } else if strings.HasSuffix(verb, "e") {
       CmdType = "export"
+    } else if verb == "l" {
+
     } else {
       return errors.New("Invalid command")
     }
+
   } else if slices.Contains(longforms, verb) {
     Cmd = verb
     if len(os.Args) == 2 && Cmd != "list" {
@@ -125,36 +127,6 @@ func HandleArgs(file *ParsedRc) (error) {
         fmt.Println("CmdType: ", CmdType)
         fmt.Println(value)
       }
-    case "ga":
-      if Name == "" {
-        fmt.Print("Which alias would you like retrieve: ")
-        _, err := fmt.Scanln(&Name)
-        if err != nil {
-          return errors.New("Error reading input: " + err.Error())
-        }
-      }
-      
-      value, err := GetName(file, Name, CmdType)
-      if err != nil {
-        return errors.New("Error getting alias: " + err.Error())
-      }
-
-      fmt.Println(value)
-    case "ge":
-      if Name == "" {
-        fmt.Print("Which export would you like retrieve: ")
-        _, err := fmt.Scanln(&Name)
-        if err != nil {
-          return errors.New("Error reading input: " + err.Error())
-        }
-      }
-
-      value, err := GetName(file, Name, CmdType)
-      if err != nil {
-        return errors.New("Error getting export: " + err.Error())
-      }
-
-    fmt.Println(value)
   }
 
   return nil
