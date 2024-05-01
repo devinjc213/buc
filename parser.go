@@ -15,6 +15,7 @@ type AliasExport struct {
 type ParsedRc struct {
     Aliases map[string]AliasExport
     Exports map[string]AliasExport
+    RawFile string
 }
 
 func ParseFile(filePath string) (*ParsedRc, error) {
@@ -74,6 +75,6 @@ func ParseFile(filePath string) (*ParsedRc, error) {
     }
   }
 
-  return &ParsedRc{Aliases: aliases, Exports: exports}, nil
+  return &ParsedRc{Aliases: aliases, Exports: exports, RawFile: fileStr }, nil
 }
 
