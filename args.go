@@ -3,9 +3,9 @@ package main
 import (
   "fmt"
   "errors"
-  "flag"
   "slices"
   "strings"
+  "os"
 )
 
 var (
@@ -17,80 +17,114 @@ func HandleArgs(file *ParsedRc) (error) {
   shorthands := []string{"ga", "ge", "sa", "se", "la", "le", "g", "l"}
   longforms := []string{"get", "set", "list"}
 
-  args := flag.Args()
-  if len(args) == 0 {
-    return errors.New("No command provided")
-  }
+  fmt.Println(os.Args)
+  verb := os.Args[1]
 
-  if slices.Contains(shorthands, args[0]) {
-    Cmd = args[0]
-    if strings.HasSuffix(Cmd, "a") {
+  if slices.Contains(shorthands, verb) {
+    if strings.HasPrefix(verb, "g") {
+      Cmd = "get"
+    } else if strings.HasPrefix(verb, "s") {
+      Cmd = "set"
+    } else if strings.HasPrefix(verb, "l") {
+      Cmd = "list"
+    } else {
+      return errors.New("Invalid command")
+    }
+
+    if strings.HasSuffix(verb, "a") {
       CmdType = "alias"
-    } else if strings.HasSuffix(Cmd, "e") {
+    } else if strings.HasSuffix(verb, "e") {
       CmdType = "export"
     } else {
       return errors.New("Invalid command")
     }
-  } else if slices.Contains(longforms, args[0]) {
-    listCmd := flag.NewFlagSet("list", flag.ExitOnError)
-    listCmd.BoolVar(&listExport, "a", true, "Only list aliases")
-    listCmd.BoolVar(&listAlias, "e", true, "Only list exports")
-    getCmd := flag.NewFlagSet("get", flag.ExitOnError)
-    setCmd := flag.NewFlagSet("set", flag.ExitOnError)
-    getCmd.StringVar(&Name, "n", "", "Name of alias or export to retrieve")
-    setCmd.StringVar(&Name, "n", "", "Name of alias or export to set")
-
-    Cmd = args[0]
-
-    if len(args) < 2 && Cmd != "list" {
-      if err := getCmd.Parse(args[1:]); err != nil {
-        return errors.New("Error parsing get command: " + err.Error())
+  } else if slices.Contains(longforms, verb) {
+    Cmd = verb
+    if len(os.Args) == 2 && Cmd != "list" {
+      fmt.Println("Variable name: ")
+      _, err := fmt.Scanln(&Name)
+      if err != nil {
+        return errors.New("Error reading input: " + err.Error())
       }
-
-      if Name == "" {
-        fmt.Print("Which alias or export would you like retrieve: ")
-        _, err := fmt.Scanln(&Name)
-        if err != nil {
-          return errors.New("Error reading input: " + err.Error())
+    } else if len(os.Args) > 2 {
+      if Cmd == "list" {
+        if os.Args[2] == "alias" {
+          CmdType = "alias"
+        } else if os.Args[2] == "export" {
+          CmdType = "export"
+        }
+      } else {
+        if os.Args[2] == "alias" {
+          CmdType = "alias"
+          if len(os.Args) == 3 {
+            Name = os.Args[3]
+          }
+        } else if os.Args[2] == "export" {
+          CmdType = "export"
+          if len(os.Args) == 3 {
+            Name = os.Args[3]
+          }
+        } else {
+          Name = os.Args[2]
         }
       }
     }
+  } else {
+    return errors.New("Invalid command")
   }
   
   switch Cmd {
     case "list":
-      if listAlias {
+      if CmdType == "" {
         fmt.Printf("Aliases:\n")
         for name, alias := range file.Aliases {
           fmt.Printf("%s = %s\n", name, alias.Value)
         }
-      }
 
-      if listAlias && listExport {
-        fmt.Printf("\n\n")
-      }
-
-      if listExport {
+        fmt.Printf("\n\nExports:\n")
+        for name, export := range file.Exports {
+          fmt.Printf("%s = %s\n", name, export.Value)
+        }
+      } else if CmdType == "alias" {
+        fmt.Printf("Aliases:\n")
+        for name, alias := range file.Aliases {
+          fmt.Printf("%s = %s\n", name, alias.Value)
+        }
+      } else if CmdType == "export" {
         fmt.Printf("Exports:\n")
         for name, export := range file.Exports {
           fmt.Printf("%s = %s\n", name, export.Value)
         }
       }
     case "get":
-      value, err := GetName(file, Name, "alias")
-      if err != nil {
-        value, err = GetName(file, Name, "export")
+      if CmdType == "alias" {
+        value, err := GetName(file, Name, "alias")
         if err != nil {
-          return errors.New("No alias or export found with that name")
-        } else {
-          CmdType = "export"
+          return errors.New("No alias found with that name")
         }
+        fmt.Println(value)
+      } else if CmdType == "export" {
+        value, err := GetName(file, Name, "export")
+        if err != nil {
+          return errors.New("No export found with that name")
+        }
+        fmt.Println(value)
       } else {
-        CmdType = "alias"
-      }
+        value, err := GetName(file, Name, "alias")
+        if err != nil {
+          value, err = GetName(file, Name, "export")
+          if err != nil {
+            return errors.New("No alias or export found with that name")
+          } else {
+            CmdType = "export"
+          }
+        } else {
+          CmdType = "alias"
+        }
 
-      fmt.Println("CmdType: ", CmdType)
-      fmt.Println(value)
+        fmt.Println("CmdType: ", CmdType)
+        fmt.Println(value)
+      }
     case "ga":
       if Name == "" {
         fmt.Print("Which alias would you like retrieve: ")

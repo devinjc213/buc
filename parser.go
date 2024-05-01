@@ -60,6 +60,17 @@ func ParseFile(filePath string) (*ParsedRc, error) {
       }
 
       aliases[name] = AliasExport{Value: value, LineNum: i}
+    } else if strings.HasPrefix(trimmedLine, "export") {
+      parts := strings.SplitN(trimmedLine, "=", 2)
+      if len(parts) != 2 {
+        fmt.Println("Invalid export line:", line)
+        continue
+      }
+
+      name := strings.TrimPrefix(strings.TrimSpace(parts[0]), "export ")
+      value := strings.TrimSpace(parts[1])
+
+      exports[name] = AliasExport{Value: value, LineNum: i}
     }
   }
 
