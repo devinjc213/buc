@@ -6,13 +6,14 @@ import (
   "path/filepath"
 )
 
-func main() {
-  args := os.Args[1:]
-  if len(args) == 0 {
-    fmt.Println("No command provided")
-    return
-  }
+var (
+  Name string
+  Value string
+  Cmd string
+  CmdType string
+)
 
+func main() {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		fmt.Println("Error getting home directory:", err)
@@ -27,7 +28,7 @@ func main() {
     return
   }
 
-  argErr := HandleArgs(args, result)
+  argErr := HandleArgs(result, &result.RawFile)
   if argErr != nil {
     fmt.Println("Error parsing args: ", err)
     return
