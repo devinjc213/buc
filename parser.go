@@ -21,6 +21,7 @@ type ParsedRc struct {
 func ParseFile(filePath string) (*ParsedRc, error) {
   file, err := os.ReadFile(filePath)
   if err != nil {
+    fmt.Print("error")
     return nil, errors.New("Error reading file")
   }
 

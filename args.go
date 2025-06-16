@@ -12,49 +12,55 @@ func HandleArgs(file *ParsedRc, writeFile *string) (error) {
   shorthands := []string{"ga", "ge", "sa", "se", "la", "le", "g", "l"}
   longforms := []string{"get", "set", "list"}
 
-  verb := os.Args[1]
-
-  if slices.Contains(shorthands, verb) {
-    parseShorthand(verb)
-  } else if slices.Contains(longforms, verb) {
-    parseLongform(verb)
+  if slices.Contains(shorthands, Verb) {
+    parseShorthand()
+  } else if slices.Contains(longforms, Verb) {
+    parseLongform()
   } else {
     return errors.New("Invalid command")
   }
   
-  switch Cmd {
+  switch Verb {
     case "list":
       printVars(file)
     case "get":
       getVars(file)
+    case "set":
+      setVar(writeFile)
   }
 
   return nil
 }
 
-func parseLongform(verb string) (error) {
-  Cmd = verb
-  if len(os.Args) == 2 && Cmd != "list" {
+func setVar(file *string) {
+    SetVar(file, Name, Value, Subject)
+}
+
+func parseLongform() (error) {
+  if len(os.Args) == 2 && Verb != "list" {
     fmt.Print("Variable name: ")
     _, err := fmt.Scanln(&Name)
     if err != nil {
       return errors.New("Error reading input: " + err.Error())
     }
   } else if len(os.Args) > 2 {
-    if Cmd == "list" {
+    if Verb == "list" {
       if os.Args[2] == "alias" {
-        CmdType = "alias"
+        Subject = "alias"
       } else if os.Args[2] == "export" {
-        CmdType = "export"
+        Subject = "export"
       }
     } else {
       if os.Args[2] == "alias" {
-        CmdType = "alias"
-        if len(os.Args) == 3 {
+        Subject = "alias"
+        if len(os.Args) > 3 {
           Name = os.Args[3]
         }
+        if len(os.Args) > 4 {
+          Value = os.Args[4]
+        }
       } else if os.Args[2] == "export" {
-        CmdType = "export"
+        Subject = "export"
         if len(os.Args) == 3 {
           Name = os.Args[3]
         }
@@ -67,22 +73,22 @@ func parseLongform(verb string) (error) {
   return nil
 }
 
-func parseShorthand(verb string) (error) {
-  if strings.HasPrefix(verb, "g") {
-    Cmd = "get"
-  } else if strings.HasPrefix(verb, "s") {
-    Cmd = "set"
-  } else if strings.HasPrefix(verb, "l") {
-    Cmd = "list"
+func parseShorthand() (error) {
+  if strings.HasPrefix(Verb, "g") {
+    Verb = "get"
+  } else if strings.HasPrefix(Verb, "s") {
+    Verb = "set"
+  } else if strings.HasPrefix(Verb, "l") {
+    Verb = "list"
   } else {
     return errors.New("Invalid command")
   }
 
-  if strings.HasSuffix(verb, "a") {
-    CmdType = "alias"
-  } else if strings.HasSuffix(verb, "e") {
-    CmdType = "export"
-  } else if verb == "l" {
+  if strings.HasSuffix(Verb, "a") {
+    Subject = "alias"
+  } else if strings.HasSuffix(Verb, "e") {
+    Subject = "export"
+  } else if Verb == "l" {
 
   } else {
     return errors.New("Invalid command")
@@ -92,7 +98,7 @@ func parseShorthand(verb string) (error) {
 }
 
 func printVars(file *ParsedRc) {
-  if CmdType == "" {
+  if Subject == "" {
     fmt.Printf("Aliases:\n")
     for name, alias := range file.Aliases {
       fmt.Printf("%s = %s\n", name, alias.Value)
@@ -102,12 +108,12 @@ func printVars(file *ParsedRc) {
     for name, export := range file.Exports {
       fmt.Printf("%s = %s\n", name, export.Value)
     }
-  } else if CmdType == "alias" {
+  } else if Subject == "alias" {
     fmt.Printf("Aliases:\n")
     for name, alias := range file.Aliases {
       fmt.Printf("%s = %s\n", name, alias.Value)
     }
-  } else if CmdType == "export" {
+  } else if Subject == "export" {
     fmt.Printf("Exports:\n")
     for name, export := range file.Exports {
       fmt.Printf("%s = %s\n", name, export.Value)
@@ -116,13 +122,13 @@ func printVars(file *ParsedRc) {
 }
 
 func getVars(file *ParsedRc) (error) {
-  if CmdType == "alias" {
+  if Subject == "alias" {
     value, err := GetName(file, Name, "alias")
     if err != nil {
       return errors.New("No alias found with that name")
     }
     fmt.Println(value)
-  } else if CmdType == "export" {
+  } else if Subject == "export" {
     value, err := GetName(file, Name, "export")
     if err != nil {
       return errors.New("No export found with that name")
@@ -135,15 +141,16 @@ func getVars(file *ParsedRc) (error) {
       if err != nil {
         return errors.New("No alias or export found with that name")
       } else {
-        CmdType = "export"
+        Subject = "export"
       }
     } else {
-      CmdType = "alias"
+      Subject = "alias"
     }
 
-    fmt.Println("CmdType: ", CmdType)
+    fmt.Println("Subject: ", Subject)
     fmt.Println(value)
   }
 
   return nil
 }
+
