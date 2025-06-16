@@ -9,8 +9,8 @@ import (
 var (
   Name string
   Value string
-  Cmd string
-  CmdType string
+  Verb string
+  Subject string
 )
 
 func main() {
@@ -21,6 +21,7 @@ func main() {
 	}
 
 	bashrcPath := filepath.Join(homeDir, ".bashrc")
+  fmt.Println("Bashrc path: ", bashrcPath)
 
   result, err := ParseFile(bashrcPath)
   if err != nil {
@@ -28,6 +29,7 @@ func main() {
     return
   }
 
+  Verb = os.Args[1]
   argErr := HandleArgs(result, &result.RawFile)
   if argErr != nil {
     fmt.Println("Error parsing args: ", err)

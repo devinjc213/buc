@@ -4,6 +4,7 @@ import (
   "fmt"
   "strings"
   "os"
+  "path/filepath"
 )
 
 func GetName(file *ParsedRc, name string, cmdType string) (string, error) {
@@ -29,14 +30,16 @@ func SetVar(file *string, name string, value string, cmdType string) {
 
   for i, line := range lines {
     if strings.HasPrefix(strings.TrimSpace(line), linePrefix) {
-      lines[i] = fmt.Sprintf("%s %s=%s", cmdType, name, value)
+      lines[i] = fmt.Sprintf("%s %s=\"%s\"", cmdType, name, value)
       *file = strings.Join(lines, "\n")
       break
     }
   }
 
-  err := os.WriteFile("~/.bashrc_test", []byte(*file), 0644)
+  writeFile := filepath.Join(os.Getenv("HOME"), ".bashrc_test")
+  err := os.WriteFile(writeFile, []byte(*file), 0644)
   if err != nil {
+    fmt.Println(err)
     fmt.Println("Error writing to file")
   }
 } 
